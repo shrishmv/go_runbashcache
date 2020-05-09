@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
 	"os/exec"
-	"time"
 	"runbashcache/myredis"
+	"time"
 )
 
 func main() {
@@ -38,9 +38,16 @@ func main() {
 	val := myredis.MyHget(hash, key)
 	fmt.Println(val)
 
+	key = "hohoh"
+	value = "nononno"
+	myredis.MyHset(hash, key, value)
+	myredis.MySetExp(hash)
+	mySleep(2)
+	val = myredis.MyHget(hash, key)
+	fmt.Println(val)
 }
 
 func mySleep(sec int) {
-	fmt.Println("Sleeping ",sec," secs....")
-	time.Sleep(time.Duration(sec * 1000) * time.Millisecond)
+	fmt.Println("Sleeping ", sec, " secs....")
+	time.Sleep(time.Duration(sec*1000) * time.Millisecond)
 }
