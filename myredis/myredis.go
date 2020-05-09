@@ -2,6 +2,7 @@ package myredis
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -15,16 +16,36 @@ var pool *redis.Pool
 
 const (
 	ttl      = 3
-	redisUrl = "localhost:6379"
+	redisUrl = "local:6379"
 )
+
+func createPool(addr string, opts ...redis.DialOption) (*redis.Pool, error) {
+	return &redis.Pool{
+		MaxIdle:     5,
+		MaxActive:   10,
+		IdleTimeout: time.Minute,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", addr, opts...)
+		},
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			_, err := c.Do("PING")
+			return err
+		},
+	}, nil
+}
 
 func GetRedisCluster() redisc.Cluster {
 	once.Do(func() {
 		fmt.Println("Initializing redis conn cluster!")
 
-		cluster := redisc.Cluster{
+		cluster = redisc.Cluster{
 			StartupNodes: []string{redisUrl},
 			DialOptions:  []redis.DialOption{redis.DialConnectTimeout(2 * time.Second)},
+			CreatePool:   createPool,
+		}
+
+		if err := cluster.Refresh(); err != nil {
+			log.Fatalf("Refresh failed: %v", err)
 		}
 
 		DoPingTestCluster(cluster)
@@ -71,11 +92,7 @@ func newPool() *redis.Pool {
 		// Dial is an application supplied function for creating and
 		// configuring a connection.
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", redisUrl
-		ppppp
-	
-	
-	pl)
+			c, err := redis.Dial("tcp", redisUrl)
 			if err != nil {
 				panic(err.Error())
 			}
